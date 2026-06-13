@@ -13,35 +13,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://skilltrade.app";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_URL),
-  title: {
-    default: "SkillTrade — Exchange Skills with People Near You",
-    template: "%s | SkillTrade",
-  },
-  description:
-    "Trade skills with people in your city. Teach what you know, learn what you want — no money, no middleman. SkillTrade matches you based on complementary skills and location.",
-  keywords: ["skill exchange", "learn new skills", "teach skills", "skill swap", "local learning", "knowledge sharing", "skill trade"],
-  openGraph: {
-    title: "SkillTrade — Exchange Skills with People Near You",
-    description:
-      "Trade skills with people in your city. Teach what you know, learn what you want — no money, no middleman.",
-    type: "website",
-    siteName: "SkillTrade",
-    url: SITE_URL,
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "SkillTrade" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SkillTrade — Exchange Skills with People Near You",
-    description: "Trade skills with people in your city. Teach what you know, learn what you want.",
-    images: ["/opengraph-image"],
-  },
+  title: "SkillTrade",
   robots: {
-    index: true,
-    follow: true,
+    index: false,
+    follow: false,
   },
 };
 
