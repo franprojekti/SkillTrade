@@ -76,8 +76,9 @@ export function AppNav({
                   ? unreadMessages
                   : href === "/app/requests"
                   ? unreadNotifications
+                  : href === "/app/matches"
+                  ? newMatches
                   : 0;
-              const showDot = href === "/app/matches" && newMatches > 0 && !isActive;
               return (
                 <Link
                   key={href}
@@ -91,13 +92,10 @@ export function AppNav({
                 >
                   <Icon className="h-4 w-4" />
                   {label}
-                  {badge > 0 && (
+                  {badge > 0 && !isActive && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                       {badge > 9 ? "9+" : badge}
                     </span>
-                  )}
-                  {showDot && (
-                    <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-primary" />
                   )}
                 </Link>
               );
@@ -153,8 +151,9 @@ export function AppNav({
                 ? unreadMessages
                 : href === "/app/requests"
                 ? unreadNotifications
+                : href === "/app/matches"
+                ? newMatches
                 : 0;
-            const showDot = href === "/app/matches" && newMatches > 0 && !isActive;
             return (
               <Link
                 key={href}
@@ -166,13 +165,10 @@ export function AppNav({
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{label}</span>
-                {badge > 0 && (
+                {badge > 0 && !isActive && (
                   <span className="absolute top-0 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
                     {badge > 9 ? "9+" : badge}
                   </span>
-                )}
-                {showDot && (
-                  <span className="absolute top-0.5 right-1.5 h-2 w-2 rounded-full bg-primary" />
                 )}
               </Link>
             );
