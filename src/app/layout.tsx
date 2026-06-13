@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist_Mono, Inter, Manrope } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -7,11 +7,6 @@ import { cn } from "@/lib/utils";
 const manropeHeading = Manrope({subsets:['latin'],variable:'--font-heading'});
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "SkillTrade",
@@ -29,7 +24,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={cn("dark h-full", geistMono.variable, "font-sans", inter.variable, manropeHeading.variable)}
+      className={cn("dark h-full font-sans", inter.variable, manropeHeading.variable)}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         {children}

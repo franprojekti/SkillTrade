@@ -135,7 +135,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
     const supabase = createClient();
 
     try {
-      // Update profile
+      // Update profile (without onboarding_completed — set that only after skills succeed)
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
@@ -146,7 +146,6 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
           location_city: city.trim() || null,
           location_area: area.trim() || null,
           connection_preference: connectionPref,
-          onboarding_completed: true,
         })
         .eq("id", userId);
 
@@ -175,6 +174,13 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
         );
         if (wantedError) throw wantedError;
       }
+
+      // Mark onboarding complete only after all skills are saved
+      const { error: completeError } = await supabase
+        .from("profiles")
+        .update({ onboarding_completed: true })
+        .eq("id", userId);
+      if (completeError) throw completeError;
 
       sessionStorage.removeItem(STORAGE_KEY);
       router.push("/app/dashboard");

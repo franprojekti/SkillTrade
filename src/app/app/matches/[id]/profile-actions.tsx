@@ -46,13 +46,18 @@ export function ProfileActions({
     }
     if (!connectionRequest) return;
     setChatLoading(true);
-    const convId = await ensureConversation(connectionRequest.id);
-    setChatLoading(false);
-    if (convId) {
-      setResolvedConvId(convId);
-      router.push(`/app/chat/${convId}`);
-    } else {
+    try {
+      const convId = await ensureConversation(connectionRequest.id);
+      if (convId) {
+        setResolvedConvId(convId);
+        router.push(`/app/chat/${convId}`);
+      } else {
+        toast.error("Could not open chat");
+      }
+    } catch {
       toast.error("Could not open chat");
+    } finally {
+      setChatLoading(false);
     }
   }
 

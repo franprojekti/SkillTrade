@@ -15,10 +15,9 @@ import type { ReceivedRequest, SentRequest } from "./page";
 interface RequestsTabsProps {
   received: ReceivedRequest[];
   sent: SentRequest[];
-  currentUserId: string;
 }
 
-export function RequestsTabs({ received, sent, currentUserId }: RequestsTabsProps) {
+export function RequestsTabs({ received, sent }: RequestsTabsProps) {
   const [active, setActive] = useState<"received" | "sent">("received");
 
   return (

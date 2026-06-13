@@ -96,27 +96,30 @@ export function EditProfileForm({
 
       if (profileError) throw profileError;
 
-      // Delete all existing user skills and re-insert
-      await supabase.from("user_skills").delete().eq("user_id", userId);
+      // Diff-based skill update: insert added, delete removed (never delete-all-then-insert)
+      const addedOffered = offeredSkillIds.filter(id => !initialOffered.includes(id));
+      const addedWanted = wantedSkillIds.filter(id => !initialWanted.includes(id));
+      const removedOffered = initialOffered.filter(id => !offeredSkillIds.includes(id));
+      const removedWanted = initialWanted.filter(id => !wantedSkillIds.includes(id));
 
-      const allInserts = [
-        ...offeredSkillIds.map((skill_id) => ({
-          user_id: userId,
-          skill_id,
-          skill_type: "offered" as const,
-        })),
-        ...wantedSkillIds.map((skill_id) => ({
-          user_id: userId,
-          skill_id,
-          skill_type: "wanted" as const,
-        })),
+      const toInsert = [
+        ...addedOffered.map(skill_id => ({ user_id: userId, skill_id, skill_type: "offered" as const })),
+        ...addedWanted.map(skill_id => ({ user_id: userId, skill_id, skill_type: "wanted" as const })),
       ];
+      if (toInsert.length > 0) {
+        const { error: insertError } = await supabase.from("user_skills").insert(toInsert);
+        if (insertError) throw insertError;
+      }
 
-      if (allInserts.length > 0) {
-        const { error: skillsError } = await supabase
-          .from("user_skills")
-          .insert(allInserts);
-        if (skillsError) throw skillsError;
+      if (removedOffered.length > 0) {
+        const { error } = await supabase.from("user_skills").delete()
+          .eq("user_id", userId).eq("skill_type", "offered").in("skill_id", removedOffered);
+        if (error) throw error;
+      }
+      if (removedWanted.length > 0) {
+        const { error } = await supabase.from("user_skills").delete()
+          .eq("user_id", userId).eq("skill_type", "wanted").in("skill_id", removedWanted);
+        if (error) throw error;
       }
 
       toast.success("Profile updated");

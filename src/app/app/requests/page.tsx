@@ -59,7 +59,6 @@ export default async function RequestsPage() {
       <RequestsTabs
         received={(received ?? []) as unknown as ReceivedRequest[]}
         sent={(sent ?? []) as unknown as SentRequest[]}
-        currentUserId={user.id}
       />
     </div>
   );
