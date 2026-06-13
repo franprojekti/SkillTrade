@@ -66,7 +66,7 @@ export default async function AppLayout({
         displayName={profile.display_name}
         unreadNotifications={unreadNotifications ?? 0}
         unreadMessages={unreadMessages ?? 0}
-        newMatches={newMatchesCount ?? 0}
+        newMatches={profile.onboarding_completed ? (newMatchesCount ?? 0) : 0}
       />
       <main className="flex-1 pb-20 md:pb-0">
         <div className="mx-auto w-full max-w-5xl px-4 py-6">{children}</div>
