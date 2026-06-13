@@ -27,8 +27,8 @@ export default async function AppLayout({
     redirect("/login");
   }
 
-  // Get unread counts + new matches indicator for nav badges
-  const [{ count: unreadNotifications }, { count: unreadMessages }, { count: newMatchesCount }] =
+  // Get unread counts + actual match count for nav badges
+  const [{ count: unreadNotifications }, { count: unreadMessages }, matchesResult] =
     await Promise.all([
       supabase
         .from("notifications")
@@ -42,14 +42,10 @@ export default async function AppLayout({
         .eq("user_id", user.id)
         .is("read_at", null)
         .eq("type", "new_message"),
-      supabase
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .neq("id", user.id)
-        .eq("is_active", true)
-        .eq("onboarding_completed", true)
-        .gt("updated_at", profile.last_matches_viewed_at ?? "1970-01-01T00:00:00Z"),
+      supabase.rpc("get_matches", { p_user_id: user.id }),
     ]);
+
+  const newMatchesCount = matchesResult.data?.length ?? 0;
 
   return (
     <div className="min-h-screen flex flex-col relative">
