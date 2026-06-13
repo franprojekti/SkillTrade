@@ -78,6 +78,7 @@ export function ChangePasswordForm({ username }: { username: string }) {
             type="button"
             onClick={() => setShowCurrent((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            aria-label={showCurrent ? "Hide current password" : "Show current password"}
           >
             {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
@@ -100,6 +101,7 @@ export function ChangePasswordForm({ username }: { username: string }) {
             type="button"
             onClick={() => setShowNew((v) => !v)}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            aria-label={showNew ? "Hide new password" : "Show new password"}
           >
             {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>

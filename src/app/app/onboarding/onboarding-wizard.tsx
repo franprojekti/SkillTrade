@@ -308,6 +308,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
                     key={pref}
                     type="button"
                     onClick={() => setConnectionPref(pref)}
+                    aria-pressed={connectionPref === pref}
                     className={`rounded-lg border-2 p-3 text-sm font-medium transition-colors ${
                       connectionPref === pref
                         ? "border-primary bg-accent text-accent-foreground"

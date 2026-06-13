@@ -39,7 +39,7 @@ export function InitialsAvatar({
         SIZE_CLASSES[size],
         className
       )}
-      aria-label={`Avatar for ${name}`}
+      aria-hidden="true"
     >
       <User className={cn("text-primary", ICON_CLASSES[size])} />
     </div>

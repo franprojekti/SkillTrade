@@ -23,8 +23,10 @@ export function RequestsTabs({ received, sent, currentUserId }: RequestsTabsProp
 
   return (
     <div>
-      <div className="flex gap-1 mb-6">
+      <div className="flex gap-1 mb-6" role="tablist">
         <button
+          role="tab"
+          aria-selected={active === "received"}
           onClick={() => setActive("received")}
           className={cn(
             "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
@@ -39,6 +41,8 @@ export function RequestsTabs({ received, sent, currentUserId }: RequestsTabsProp
           )}
         </button>
         <button
+          role="tab"
+          aria-selected={active === "sent"}
           onClick={() => setActive("sent")}
           className={cn(
             "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
@@ -129,7 +133,7 @@ function ReceivedCard({ request, index }: { request: ReceivedRequest; index: num
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
     >
       <div className="flex items-start gap-3">
-        <Link href={`/app/matches/${request.sender_id}`}>
+        <Link href={`/app/matches/${request.sender_id}`} aria-label={`View ${displayName}'s profile`}>
           <InitialsAvatar
             username={profile.username}
             displayName={profile.display_name}
@@ -219,7 +223,7 @@ function SentCard({ request, index }: { request: SentRequest; index: number }) {
       style={{ animationDelay: `${index * 60}ms`, animationFillMode: "both" }}
     >
       <div className="flex items-center gap-3">
-        <Link href={`/app/matches/${request.receiver_id}`}>
+        <Link href={`/app/matches/${request.receiver_id}`} aria-label={`View ${displayName}'s profile`}>
           <InitialsAvatar
             username={profile.username}
             displayName={profile.display_name}

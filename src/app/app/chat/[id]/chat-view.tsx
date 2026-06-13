@@ -144,7 +144,7 @@ export function ChatView({
         >
           <ArrowLeft className="h-5 w-5" />
         </Link>
-        <Link href={`/app/matches/${otherUserId}`}>
+        <Link href={`/app/matches/${otherUserId}`} aria-label={`View ${displayName}'s profile`}>
           <InitialsAvatar
             username={otherUsername}
             displayName={otherDisplayName}
@@ -163,7 +163,7 @@ export function ChatView({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1" aria-live="polite" aria-label="Messages">
 
         {Object.entries(groupedMessages).map(([date, dayMessages]) => (
           <div key={date}>
@@ -225,6 +225,7 @@ export function ChatView({
             disabled={sending}
             className="flex-1"
             autoComplete="off"
+            aria-label="Message"
           />
           <Button
             size="icon"

@@ -89,10 +89,11 @@ export function RegisterForm() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className={usernameError ? "border-destructive" : ""}
+          aria-describedby={usernameError ? "username-error" : undefined}
           required
         />
         {usernameError && (
-          <p className="text-sm text-destructive">{usernameError}</p>
+          <p id="username-error" className="text-sm text-destructive">{usernameError}</p>
         )}
         {!usernameError && username && (
           <p className="text-sm flex items-center gap-1.5">

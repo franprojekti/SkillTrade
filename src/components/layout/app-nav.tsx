@@ -106,7 +106,7 @@ export function AppNav({
 
           {/* Profile dropdown */}
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <DropdownMenuTrigger className="flex items-center gap-2 rounded-lg p-1 hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Open profile menu">
               <InitialsAvatar
                 username={username}
                 displayName={displayName}

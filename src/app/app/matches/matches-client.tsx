@@ -89,6 +89,7 @@ export function MatchesClient({
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search matches..."
             className="pl-9"
+            aria-label="Search matches"
           />
         </div>
       </div>
