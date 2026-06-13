@@ -101,12 +101,19 @@ CREATE POLICY "connection_requests_insert"
   TO authenticated
   WITH CHECK ((select auth.uid()) = sender_id);
 
--- Receiver can update status (accept/decline); sender can cancel
-CREATE POLICY "connection_requests_update"
+-- Receiver can accept or decline a pending request (overwritten by migration 019)
+-- Sender can only cancel their own pending request (overwritten by migration 019)
+CREATE POLICY "connection_requests_update_receiver"
   ON public.connection_requests FOR UPDATE
   TO authenticated
-  USING ((select auth.uid()) = receiver_id OR (select auth.uid()) = sender_id)
-  WITH CHECK ((select auth.uid()) = receiver_id OR (select auth.uid()) = sender_id);
+  USING ((select auth.uid()) = receiver_id AND status = 'pending')
+  WITH CHECK ((select auth.uid()) = receiver_id AND status IN ('accepted', 'declined'));
+
+CREATE POLICY "connection_requests_update_sender"
+  ON public.connection_requests FOR UPDATE
+  TO authenticated
+  USING ((select auth.uid()) = sender_id AND status = 'pending')
+  WITH CHECK ((select auth.uid()) = sender_id AND status = 'cancelled');
 
 -- ============================================================
 -- CONVERSATIONS
