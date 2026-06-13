@@ -183,8 +183,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
       if (completeError) throw completeError;
 
       sessionStorage.removeItem(STORAGE_KEY);
-      router.push("/app/dashboard");
-      router.refresh();
+      window.location.replace("/app/dashboard");
     } catch {
       toast.error("Something went wrong");
       setSaving(false);

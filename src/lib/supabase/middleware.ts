@@ -64,7 +64,12 @@ export async function updateSession(request: NextRequest) {
     if (profile && !profile.onboarding_completed) {
       const url = request.nextUrl.clone();
       url.pathname = "/app/onboarding";
-      return NextResponse.redirect(url);
+      const redirectResponse = NextResponse.redirect(url);
+      // Copy session cookies so auth state is preserved after redirect
+      supabaseResponse.cookies.getAll().forEach((cookie) => {
+        redirectResponse.cookies.set(cookie.name, cookie.value);
+      });
+      return redirectResponse;
     }
   }
 
