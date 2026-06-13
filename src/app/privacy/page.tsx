@@ -3,7 +3,20 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "SkillTrade Privacy Policy — what data we collect and how we use it.",
+  description: "SkillTrade collects only your username, general city, and declared skills — no email, no GPS, no ad tracking. Read our full privacy policy.",
+  alternates: { canonical: "/privacy" },
+  openGraph: {
+    title: "Privacy Policy | SkillTrade",
+    description: "SkillTrade collects only your username, general city, and declared skills — no email, no GPS, no ad tracking.",
+    url: "/privacy",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "SkillTrade" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Privacy Policy | SkillTrade",
+    description: "SkillTrade collects only your username, general city, and declared skills — no email, no GPS, no ad tracking.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function PrivacyPage() {

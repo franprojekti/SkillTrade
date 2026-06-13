@@ -3,7 +3,20 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "SkillTrade Terms of Service.",
+  description: "SkillTrade Terms of Service — acceptable use, in-person meeting safety, content ownership, and account rules for skill exchange.",
+  alternates: { canonical: "/terms" },
+  openGraph: {
+    title: "Terms of Service | SkillTrade",
+    description: "SkillTrade Terms of Service — acceptable use, in-person meeting safety, content ownership, and account rules.",
+    url: "/terms",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "SkillTrade" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Terms of Service | SkillTrade",
+    description: "SkillTrade Terms of Service — acceptable use, safety, and account rules.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function TermsPage() {

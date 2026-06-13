@@ -18,9 +18,9 @@ export default function NotFound() {
       />
       <h1 className="text-6xl font-extrabold text-foreground mb-3">404</h1>
       <h2 className="text-xl font-semibold text-foreground mb-8">Page not found</h2>
-      <Link href="/app/dashboard" className={buttonVariants()}>
+      <Link href="/" className={buttonVariants()}>
         <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Dashboard
+        Back to Home
       </Link>
     </div>
   );

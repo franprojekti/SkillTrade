@@ -5,7 +5,20 @@ import { ArrowRight } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Learn about SkillTrade — a privacy-first platform for local skill exchange.",
+  description: "Learn about SkillTrade — a privacy-first platform for local skill exchange. No email, no GPS, no ads. Just people swapping skills in their city.",
+  alternates: { canonical: "/about" },
+  openGraph: {
+    title: "About SkillTrade",
+    description: "A privacy-first platform for local skill exchange. No email, no GPS, no ads. Just people swapping skills in their city.",
+    url: "/about",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "SkillTrade" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "About SkillTrade",
+    description: "A privacy-first platform for local skill exchange. No email, no GPS, no ads.",
+    images: ["/opengraph-image"],
+  },
 };
 
 export default function AboutPage() {
