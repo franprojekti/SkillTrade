@@ -8,7 +8,7 @@ import { MapPin, Check, X, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { createClient } from "@/lib/supabase/client";
-import { getDisplayName } from "@/lib/format";
+import { getDisplayName, formatLocation } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ReceivedRequest, SentRequest } from "./page";
 
@@ -90,9 +90,10 @@ export function RequestsTabs({ received, sent }: RequestsTabsProps) {
 
 function ReceivedCard({ request, index }: { request: ReceivedRequest; index: number }) {
   const router = useRouter();
-  const [loading, setLoading] = useState<"accept" | "decline" | null>(null);
+  const [loading, setLoading] = useState<"accept" | "decline" | "resend" | null>(null);
   const profile = request.profiles;
   const displayName = getDisplayName(profile);
+  const isDeclined = request.status === "declined";
 
   async function handleAccept() {
     setLoading("accept");
@@ -101,12 +102,8 @@ function ReceivedCard({ request, index }: { request: ReceivedRequest; index: num
       .from("connection_requests")
       .update({ status: "accepted", updated_at: new Date().toISOString() })
       .eq("id", request.id);
-    if (error) {
-      toast.error("Failed to accept request");
-    } else {
-      toast.success(`Connected with ${displayName}`);
-      router.refresh();
-    }
+    if (error) toast.error("Failed to accept request");
+    else { toast.success(`Connected with ${displayName}`); router.refresh(); }
     setLoading(null);
   }
 
@@ -117,12 +114,20 @@ function ReceivedCard({ request, index }: { request: ReceivedRequest; index: num
       .from("connection_requests")
       .update({ status: "declined", updated_at: new Date().toISOString() })
       .eq("id", request.id);
-    if (error) {
-      toast.error("Failed to decline request");
-    } else {
-      toast.success("Request declined");
-      router.refresh();
-    }
+    if (error) toast.error("Failed to decline request");
+    else { toast.success("Request declined"); router.refresh(); }
+    setLoading(null);
+  }
+
+  async function handleResend() {
+    setLoading("resend");
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("connection_requests")
+      .update({ status: "pending", updated_at: new Date().toISOString() })
+      .eq("id", request.id);
+    if (error) toast.error("Failed to re-open request");
+    else { toast.success("Request re-opened"); router.refresh(); }
     setLoading(null);
   }
 
@@ -133,24 +138,25 @@ function ReceivedCard({ request, index }: { request: ReceivedRequest; index: num
     >
       <div className="flex items-start gap-3">
         <Link href={`/app/matches/${request.sender_id}`} aria-label={`View ${displayName}'s profile`}>
-          <InitialsAvatar
-            username={profile.username}
-            displayName={profile.display_name}
-            size="md"
-          />
+          <InitialsAvatar username={profile.username} displayName={profile.display_name} size="md" />
         </Link>
         <div className="flex-1 min-w-0">
-          <Link
-            href={`/app/matches/${request.sender_id}`}
-            className="font-semibold text-foreground hover:text-primary"
-          >
-            {displayName}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href={`/app/matches/${request.sender_id}`} className="font-semibold text-foreground hover:text-primary">
+              {displayName}
+            </Link>
+            {isDeclined && (
+              <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium text-muted-foreground bg-muted">
+                <X className="h-3 w-3" />
+                Declined
+              </span>
+            )}
+          </div>
           <p className="text-xs text-muted-foreground">@{profile.username}</p>
           {profile.location_city && (
             <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
               <MapPin className="h-3 w-3" />
-              {[profile.location_area, profile.location_city].filter(Boolean).join(", ")}
+              {formatLocation(profile)}
             </p>
           )}
           {request.message && (
@@ -160,51 +166,54 @@ function ReceivedCard({ request, index }: { request: ReceivedRequest; index: num
           )}
         </div>
       </div>
-      <div className="flex gap-2 mt-3">
-        <Button
-          size="sm"
-          onClick={handleAccept}
-          disabled={loading !== null}
-          className="flex-1"
-        >
-          <Check className="h-4 w-4 mr-1" />
-          {loading === "accept" ? "Accepting..." : "Accept"}
+      {isDeclined ? (
+        <Button size="sm" onClick={handleResend} disabled={loading !== null} className="mt-3 w-full">
+          {loading === "resend" ? "Accepting..." : "Accept anyway"}
         </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleDecline}
-          disabled={loading !== null}
-          className="flex-1"
-        >
-          <X className="h-4 w-4 mr-1" />
-          {loading === "decline" ? "Declining..." : "Decline"}
-        </Button>
-      </div>
+      ) : (
+        <div className="flex gap-2 mt-3">
+          <Button size="sm" onClick={handleAccept} disabled={loading !== null} className="flex-1">
+            <Check className="h-4 w-4 mr-1" />
+            {loading === "accept" ? "Accepting..." : "Accept"}
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleDecline} disabled={loading !== null} className="flex-1">
+            <X className="h-4 w-4 mr-1" />
+            {loading === "decline" ? "Declining..." : "Decline"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
 
 function SentCard({ request, index }: { request: SentRequest; index: number }) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<"cancel" | "resend" | null>(null);
   const profile = request.profiles;
   const displayName = getDisplayName(profile);
 
   async function handleCancel() {
-    setLoading(true);
+    setLoading("cancel");
     const supabase = createClient();
     const { error } = await supabase
       .from("connection_requests")
       .update({ status: "cancelled", updated_at: new Date().toISOString() })
       .eq("id", request.id);
-    if (error) {
-      toast.error("Failed to cancel request");
-    } else {
-      toast.success("Request cancelled");
-      router.refresh();
-    }
-    setLoading(false);
+    if (error) toast.error("Failed to cancel request");
+    else { toast.success("Request cancelled"); router.refresh(); }
+    setLoading(null);
+  }
+
+  async function handleResend() {
+    setLoading("resend");
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("connection_requests")
+      .update({ status: "pending", updated_at: new Date().toISOString() })
+      .eq("id", request.id);
+    if (error) toast.error("Failed to re-send request");
+    else { toast.success("Request re-sent"); router.refresh(); }
+    setLoading(null);
   }
 
   const statusConfig = {
@@ -223,17 +232,10 @@ function SentCard({ request, index }: { request: SentRequest; index: number }) {
     >
       <div className="flex items-center gap-3">
         <Link href={`/app/matches/${request.receiver_id}`} aria-label={`View ${displayName}'s profile`}>
-          <InitialsAvatar
-            username={profile.username}
-            displayName={profile.display_name}
-            size="md"
-          />
+          <InitialsAvatar username={profile.username} displayName={profile.display_name} size="md" />
         </Link>
         <div className="flex-1 min-w-0">
-          <Link
-            href={`/app/matches/${request.receiver_id}`}
-            className="font-semibold text-foreground hover:text-primary"
-          >
+          <Link href={`/app/matches/${request.receiver_id}`} className="font-semibold text-foreground hover:text-primary">
             {displayName}
           </Link>
           <p className="text-xs text-muted-foreground">@{profile.username}</p>
@@ -244,14 +246,13 @@ function SentCard({ request, index }: { request: SentRequest; index: number }) {
         </div>
       </div>
       {request.status === "pending" && (
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleCancel}
-          disabled={loading}
-          className="mt-3 w-full"
-        >
-          {loading ? "Cancelling..." : "Cancel Request"}
+        <Button size="sm" variant="outline" onClick={handleCancel} disabled={loading !== null} className="mt-3 w-full">
+          {loading === "cancel" ? "Cancelling..." : "Cancel Request"}
+        </Button>
+      )}
+      {request.status === "declined" && (
+        <Button size="sm" onClick={handleResend} disabled={loading !== null} className="mt-3 w-full">
+          {loading === "resend" ? "Sending..." : "Re-send Request"}
         </Button>
       )}
     </div>

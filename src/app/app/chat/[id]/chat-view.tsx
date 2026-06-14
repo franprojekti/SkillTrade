@@ -82,9 +82,7 @@ export function ChatView({
               .from("messages")
               .update({ read_at: new Date().toISOString() })
               .eq("id", newMsg.id)
-              .then(({ error }) => {
-                if (error) console.error("Failed to mark message as read:", error);
-              });
+              .then(() => {});
           }
         }
       )

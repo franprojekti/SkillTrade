@@ -14,6 +14,7 @@ interface SkillSelectorProps {
   placeholder?: string;
   maxSelected?: number;
   onSuggest?: (name: string) => Promise<{ skill?: Skill; error?: string }>;
+  disabledSkillIds?: string[];
 }
 
 export function SkillSelector({
@@ -23,6 +24,7 @@ export function SkillSelector({
   placeholder = "Type a skill and press Enter...",
   maxSelected = 10,
   onSuggest,
+  disabledSkillIds = [],
 }: SkillSelectorProps) {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,10 @@ export function SkillSelector({
     );
 
     if (existing) {
+      if (disabledSkillIds.includes(existing.id)) {
+        setError("This skill is already in your other list.");
+        return;
+      }
       if (!selectedSkillIds.includes(existing.id)) {
         onChange([...selectedSkillIds, existing.id]);
       }

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { SkillSelector } from "@/components/ui/skill-selector";
 import { createClient } from "@/lib/supabase/client";
+import { suggestSkill } from "@/lib/suggest-skill";
 import type { Profile, Skill } from "@/types/database";
 
 type ConnectionPref = "in-person" | "online" | "both";
@@ -45,33 +46,9 @@ export function EditProfileForm({
   const [localSkills, setLocalSkills] = useState<Skill[]>(allSkills);
 
   async function handleSuggestSkill(name: string): Promise<{ skill?: Skill; error?: string }> {
-    const supabase = createClient();
-    const category = "Other";
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-    const { data: existingSkill } = await supabase
-      .from("skills")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
-    if (existingSkill) return { skill: existingSkill as Skill };
-
-    await supabase.from("skill_suggestions").insert({
-      suggested_by: userId,
-      raw_name: name,
-      category,
-    });
-
-    const { data: newSkill, error } = await supabase
-      .from("skills")
-      .insert({ canonical_name: name.trim(), slug, category, aliases: [], status: "pending_review" })
-      .select()
-      .single();
-
-    if (error || !newSkill) return { error: "Failed to add skill." };
-    setLocalSkills((prev) => [...prev, newSkill as Skill]);
-    return { skill: newSkill as Skill };
+    const result = await suggestSkill(name, userId);
+    if (result.skill) setLocalSkills((prev) => [...prev, result.skill!]);
+    return result;
   }
 
   async function handleSave() {
@@ -260,6 +237,7 @@ export function EditProfileForm({
           placeholder="Enter a skill you can teach..."
           maxSelected={10}
           onSuggest={handleSuggestSkill}
+          disabledSkillIds={wantedSkillIds}
         />
       </section>
 
@@ -276,6 +254,7 @@ export function EditProfileForm({
           placeholder="Enter a skill you want to learn..."
           maxSelected={10}
           onSuggest={handleSuggestSkill}
+          disabledSkillIds={offeredSkillIds}
         />
       </section>
 

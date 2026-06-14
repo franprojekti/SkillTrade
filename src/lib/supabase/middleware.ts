@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { toSessionOptions } from "./session-cookie";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -19,12 +20,7 @@ export async function updateSession(request: NextRequest) {
           );
           supabaseResponse = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) => {
-            // Session-only: strip Max-Age/Expires so the cookie expires on browser close.
-            // Limitation: browsers with "Restore previous session" may retain it across restarts.
-            const sessionOptions = { ...options };
-            delete sessionOptions.maxAge;
-            delete sessionOptions.expires;
-            supabaseResponse.cookies.set(name, value, sessionOptions);
+            supabaseResponse.cookies.set(name, value, toSessionOptions(options));
           });
         },
       },
@@ -35,16 +31,17 @@ export async function updateSession(request: NextRequest) {
     data: { user },
     error: getUserError,
   } = await supabase.auth.getUser();
-  if (getUserError) {
-    console.error("Auth session error:", getUserError.message);
-  }
 
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/app") && !user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
+  // Treat any auth error as unauthenticated — never grant access on a broken session
+  if (getUserError || !user) {
+    if (pathname.startsWith("/app")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/login";
+      return NextResponse.redirect(url);
+    }
+    return supabaseResponse;
   }
 
   if ((pathname === "/login" || pathname === "/register") && user) {

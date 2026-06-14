@@ -137,10 +137,10 @@ input[type="number"]::-webkit-outer-spin-button {
   margin: 0;
 }
 
-/* Green glow on focused inputs */
+/* Green glow on focused inputs — override --input-glow to change per component */
 input:focus-visible,
 textarea:focus-visible {
-  box-shadow: 0 0 0 1px #22C55E, 0 0 12px rgba(34, 197, 94, 0.15);
+  box-shadow: 0 0 0 1px var(--input-glow, #22C55E), 0 0 12px color-mix(in srgb, var(--input-glow, #22C55E) 15%, transparent);
 }
 
 

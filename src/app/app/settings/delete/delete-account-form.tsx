@@ -33,9 +33,9 @@ export function DeleteAccountForm({ username }: { username: string }) {
       return;
     }
 
-    await supabase.auth.signOut();
-    router.push("/");
-    router.refresh();
+    // User is already deleted — just clear local session and redirect
+    supabase.auth.signOut().catch(() => {});
+    window.location.replace("/login");
   }
 
   return (
@@ -44,14 +44,17 @@ export function DeleteAccountForm({ username }: { username: string }) {
         <Label htmlFor="confirm_username">
           Type your username <strong>{username}</strong> to confirm
         </Label>
-        <Input
-          id="confirm_username"
-          value={confirmation}
-          onChange={(e) => setConfirmation(e.target.value)}
-          placeholder={username}
-          autoComplete="off"
-          spellCheck={false}
-        />
+        <div style={{ "--input-glow": "var(--color-destructive)" } as React.CSSProperties}>
+          <Input
+            id="confirm_username"
+            value={confirmation}
+            onChange={(e) => setConfirmation(e.target.value)}
+            placeholder={username}
+            autoComplete="off"
+            spellCheck={false}
+            className="border-destructive/50"
+          />
+        </div>
       </div>
 
       <div className="flex gap-3">

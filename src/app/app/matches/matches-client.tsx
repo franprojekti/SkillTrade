@@ -6,7 +6,7 @@ import { Search, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
-import { formatConnectionPref } from "@/lib/format";
+import { formatConnectionPref, formatLocation, getDisplayName } from "@/lib/format";
 
 export interface ConnectedUser {
   userId: string;
@@ -112,9 +112,7 @@ export function MatchesClient({
         <div className="mb-8">
           <p className="text-xs text-muted-foreground mb-3">Connected</p>
           <div className="grid gap-3 sm:grid-cols-2">
-            {filteredConnected.map((cu, index) => {
-              const displayName = cu.displayName || cu.username;
-              return (
+            {filteredConnected.map((cu, index) => (
                 <Link
                   key={cu.userId}
                   href={`/app/matches/${cu.userId}`}
@@ -124,21 +122,20 @@ export function MatchesClient({
                   <div className="flex items-start gap-3">
                     <InitialsAvatar username={cu.username} displayName={cu.displayName} size="lg" />
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-foreground">{displayName}</p>
+                      <p className="font-semibold text-foreground">{getDisplayName({ display_name: cu.displayName, username: cu.username })}</p>
                       {cu.bio && (
                         <p className="text-xs text-muted-foreground truncate mt-0.5">{cu.bio}</p>
                       )}
                       {cu.locationCity && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
-                          {[cu.locationArea, cu.locationCity].filter(Boolean).join(", ")}
+                          {formatLocation({ location_area: cu.locationArea, location_city: cu.locationCity })}
                         </p>
                       )}
                     </div>
                   </div>
                 </Link>
-              );
-            })}
+            ))}
           </div>
         </div>
       )}
@@ -152,7 +149,6 @@ export function MatchesClient({
             {filteredMatches.map((match, index) => {
               const isConnected = connectedSet.has(match.out_user_id);
               const requestSent = sentToSet.has(match.out_user_id);
-              const displayName = match.out_display_name || match.out_username;
               const isNew = !lastViewedAt || new Date(match.out_updated_at) > new Date(lastViewedAt);
 
               return (
@@ -170,7 +166,7 @@ export function MatchesClient({
                     />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <p className="font-semibold text-foreground truncate">{displayName}</p>
+                        <p className="font-semibold text-foreground truncate">{getDisplayName({ display_name: match.out_display_name, username: match.out_username })}</p>
                         {isNew && (
                           <Badge variant="secondary" className="text-[10px] font-medium text-primary flex-shrink-0">
                             New
@@ -186,7 +182,7 @@ export function MatchesClient({
                       {match.out_location_city && (
                         <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                           <MapPin className="h-3 w-3 flex-shrink-0" />
-                          {[match.out_location_area, match.out_location_city].filter(Boolean).join(", ")}
+                          {formatLocation({ location_area: match.out_location_area, location_city: match.out_location_city })}
                         </p>
                       )}
                     </div>

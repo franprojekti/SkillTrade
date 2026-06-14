@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { requireAuth } from "@/lib/auth-guard";
-import { formatConnectionPref, formatLocation } from "@/lib/format";
+import { formatConnectionPref, formatLocation, getDisplayName } from "@/lib/format";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { Badge } from "@/components/ui/badge";
 import { ProfileActions } from "./profile-actions";
@@ -116,7 +116,7 @@ export default async function MatchProfilePage({ params }: Props) {
     .eq("bookmarked_user_id", targetUserId)
     .single();
 
-  const displayName = profile.display_name || profile.username;
+  const displayName = getDisplayName(profile);
 
   return (
     <div className="max-w-2xl mx-auto animate-in fade-in-0 duration-300">
@@ -172,7 +172,7 @@ export default async function MatchProfilePage({ params }: Props) {
       {/* Skills */}
       <div className="grid sm:grid-cols-2 gap-5 mb-6">
         <div>
-          <p className="text-xs text-muted-foreground mb-1.5">Offers:</p>
+          <p className="text-xs text-muted-foreground mb-1.5">Teaches you:</p>
           {offeredSkills.length > 0 ? (
             <div className="flex flex-wrap gap-1.5">
               {offeredSkills.map((skill) => (

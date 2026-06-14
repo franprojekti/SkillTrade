@@ -45,7 +45,15 @@ export default async function AppLayout({
       supabase.rpc("get_matches", { p_user_id: user.id }),
     ]);
 
-  const newMatchesCount = matchesResult.data?.length ?? 0;
+  // Only count matches newer than last visit
+  const newMatchesCount = profile.onboarding_completed
+    ? (matchesResult.data ?? []).filter((m: { out_updated_at: string }) =>
+        !profile.last_matches_viewed_at ||
+        new Date(m.out_updated_at) > new Date(profile.last_matches_viewed_at!)
+      ).length
+    : 0;
+
+  const showNav = profile.onboarding_completed;
 
   return (
     <div className="min-h-screen flex flex-col relative">
@@ -57,14 +65,16 @@ export default async function AppLayout({
         }}
       />
       <SessionWatcher />
-      <AppNav
-        username={profile.username}
-        displayName={profile.display_name}
-        unreadNotifications={unreadNotifications ?? 0}
-        unreadMessages={unreadMessages ?? 0}
-        newMatches={profile.onboarding_completed ? (newMatchesCount ?? 0) : 0}
-      />
-      <main className="flex-1 pb-20 md:pb-0">
+      {showNav && (
+        <AppNav
+          username={profile.username}
+          displayName={profile.display_name}
+          unreadNotifications={unreadNotifications ?? 0}
+          unreadMessages={unreadMessages ?? 0}
+          newMatches={newMatchesCount}
+        />
+      )}
+      <main className={showNav ? "flex-1 pb-20 md:pb-0" : "flex-1"}>
         <div className="mx-auto w-full max-w-5xl px-4 py-6">{children}</div>
       </main>
     </div>

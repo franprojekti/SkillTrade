@@ -49,24 +49,32 @@ export default async function MatchesPage() {
     r.sender_id === user.id ? r.receiver_id : r.sender_id
   );
 
+  const partnerIds = acceptedRequests.map((r) =>
+    r.sender_id === user.id ? r.receiver_id : r.sender_id
+  );
+
   const connectedUsers: ConnectedUser[] = [];
-  for (const req of acceptedRequests) {
-    const partnerId = req.sender_id === user.id ? req.receiver_id : req.sender_id;
-    const { data: partnerProfile } = await supabase
+  if (partnerIds.length > 0) {
+    const { data: partnerProfiles } = await supabase
       .from("profiles")
       .select("id, username, display_name, bio, location_city, location_area")
-      .eq("id", partnerId)
-      .eq("is_active", true)
-      .single();
-    if (!partnerProfile) continue;
-    connectedUsers.push({
-      userId: partnerId,
-      username: partnerProfile.username,
-      displayName: partnerProfile.display_name,
-      bio: partnerProfile.bio,
-      locationCity: partnerProfile.location_city,
-      locationArea: partnerProfile.location_area,
-    });
+      .in("id", partnerIds)
+      .eq("is_active", true);
+
+    const profileMap = new Map((partnerProfiles ?? []).map((p) => [p.id, p]));
+    for (const req of acceptedRequests) {
+      const partnerId = req.sender_id === user.id ? req.receiver_id : req.sender_id;
+      const p = profileMap.get(partnerId);
+      if (!p) continue;
+      connectedUsers.push({
+        userId: partnerId,
+        username: p.username,
+        displayName: p.display_name,
+        bio: p.bio,
+        locationCity: p.location_city,
+        locationArea: p.location_area,
+      });
+    }
   }
 
   return (

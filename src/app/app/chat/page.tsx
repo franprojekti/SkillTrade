@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/auth-guard";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "@/lib/date";
+import { getDisplayName } from "@/lib/format";
 
 export const metadata: Metadata = {
   title: "Chat",
@@ -113,7 +114,7 @@ export default async function ChatPage() {
       <div className="space-y-1">
         {processed.map((conv, index) => {
           const profile = conv.otherUser as { username: string; display_name: string | null } | null;
-          const displayName = profile?.display_name || profile?.username || "Unknown";
+          const displayName = profile ? getDisplayName(profile) : "Unknown";
           const username = profile?.username || "";
 
           return (

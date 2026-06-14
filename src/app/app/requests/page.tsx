@@ -25,14 +25,14 @@ export default async function RequestsPage() {
       "id, status, message, created_at, sender_id, profiles!connection_requests_sender_id_fkey(username, display_name, location_city, location_area)"
     )
     .eq("receiver_id", user.id)
-    .eq("status", "pending")
+    .in("status", ["pending", "declined"])
     .order("created_at", { ascending: false });
 
   // Get sent requests
   const { data: sent, error: sentError } = await supabase
     .from("connection_requests")
     .select(
-      "id, status, message, created_at, receiver_id, profiles!connection_requests_receiver_id_fkey(username, display_name, location_city)"
+      "id, status, message, created_at, receiver_id, profiles!connection_requests_receiver_id_fkey(username, display_name, location_city, location_area)"
     )
     .eq("sender_id", user.id)
     .in("status", ["pending", "accepted", "declined"])
@@ -88,5 +88,6 @@ export interface SentRequest {
     username: string;
     display_name: string | null;
     location_city: string | null;
+    location_area: string | null;
   };
 }

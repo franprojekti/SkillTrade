@@ -13,6 +13,7 @@ import { SkillSelector } from "@/components/ui/skill-selector";
 import { InitialsAvatar } from "@/components/ui/initials-avatar";
 import { createClient } from "@/lib/supabase/client";
 import { formatConnectionPref } from "@/lib/format";
+import { suggestSkill } from "@/lib/suggest-skill";
 import type { Skill } from "@/types/database";
 
 interface OnboardingWizardProps {
@@ -90,44 +91,9 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
   const progress = ((step + 1) / totalSteps) * 100;
 
   async function handleSuggestSkill(name: string): Promise<{ skill?: Skill; error?: string }> {
-    const supabase = createClient();
-    const category = "Other";
-    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-
-    const { data: existingSkill } = await supabase
-      .from("skills")
-      .select("*")
-      .eq("slug", slug)
-      .single();
-
-    if (existingSkill) {
-      return { skill: existingSkill as Skill };
-    }
-
-    await supabase.from("skill_suggestions").insert({
-      suggested_by: userId,
-      raw_name: name,
-      category,
-    });
-
-    const { data: newSkill, error } = await supabase
-      .from("skills")
-      .insert({
-        canonical_name: name.trim(),
-        slug,
-        category,
-        aliases: [],
-        status: "pending_review",
-      })
-      .select()
-      .single();
-
-    if (error || !newSkill) {
-      return { error: "Failed to add skill. Please try again." };
-    }
-
-    setLocalSkills((prev) => [...prev, newSkill as Skill]);
-    return { skill: newSkill as Skill };
+    const result = await suggestSkill(name, userId);
+    if (result.skill) setLocalSkills((prev) => [...prev, result.skill!]);
+    return result;
   }
 
   async function handleComplete() {
@@ -135,13 +101,22 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
     const supabase = createClient();
 
     try {
+      // Validate no overlap between offered and wanted skills
+      const overlap = offeredSkillIds.filter((id) => wantedSkillIds.includes(id));
+      if (overlap.length > 0) {
+        toast.error("A skill cannot be in both lists");
+        setSaving(false);
+        return;
+      }
+
       // Update profile (without onboarding_completed — set that only after skills succeed)
+      const parsedYears = yearsExp ? parseInt(yearsExp, 10) : null;
       const { error: profileError } = await supabase
         .from("profiles")
         .update({
           display_name: displayName.trim() || null,
           bio: role.trim() || null,
-          years_experience: yearsExp ? parseInt(yearsExp) : null,
+          years_experience: parsedYears !== null && !isNaN(parsedYears) ? parsedYears : null,
           location_country: country.trim() || null,
           location_city: city.trim() || null,
           location_area: area.trim() || null,
@@ -182,15 +157,27 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
         .eq("id", userId);
       if (completeError) throw completeError;
 
-      sessionStorage.removeItem(STORAGE_KEY);
       window.location.replace("/app/dashboard");
+      sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       toast.error("Something went wrong");
       setSaving(false);
     }
   }
 
+  async function handleCancel() {
+    setSaving(true);
+    const res = await fetch("/api/delete-account", { method: "DELETE" });
+    if (!res.ok) {
+      toast.error("Could not cancel registration. Please try again.");
+      setSaving(false);
+      return;
+    }
+    window.location.replace("/login");
+  }
+
   function canProceed(): boolean {
+    if (step === 1 && (!country.trim() || !city.trim())) return false;
     if (step === 2 && offeredSkillIds.length === 0) return false;
     if (step === 3 && wantedSkillIds.length === 0) return false;
     return true;
@@ -306,7 +293,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
             </div>
             <div className="space-y-2">
               <Label>Connection Preference</Label>
-              <p className="text-xs text-muted-foreground">Ovo je preferencija, ne filter — i dalje ćeš vidjeti sve matcheve.</p>
+              <p className="text-xs text-muted-foreground">This is a preference, not a filter.</p>
               <div className="grid grid-cols-3 gap-2">
                 {(["in-person", "online", "both"] as ConnectionPref[]).map((pref) => (
                   <button
@@ -336,6 +323,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
             placeholder="Enter a skill you can teach..."
             maxSelected={10}
             onSuggest={handleSuggestSkill}
+            disabledSkillIds={wantedSkillIds}
           />
         )}
 
@@ -347,6 +335,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
             placeholder="Enter a skill you want to learn..."
             maxSelected={10}
             onSuggest={handleSuggestSkill}
+            disabledSkillIds={offeredSkillIds}
           />
         )}
 
@@ -373,7 +362,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
             <div className="mt-3 space-y-2">
               {offeredSkills.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Teaches you:</p>
+                  <p className="text-xs text-muted-foreground mb-1">I Offer:</p>
                   <div className="flex flex-wrap gap-1">
                     {offeredSkills.map((s) => (
                       <Badge key={s.id} className="bg-muted text-foreground hover:bg-muted/80 border-0 text-xs">
@@ -385,7 +374,7 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
               )}
               {wantedSkills.length > 0 && (
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Learns from you:</p>
+                  <p className="text-xs text-muted-foreground mb-1">I Want to Learn:</p>
                   <div className="flex flex-wrap gap-1">
                     {wantedSkills.map((s) => (
                       <Badge key={s.id} variant="secondary" className="text-xs">
@@ -404,7 +393,12 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
         )}
       </div>
 
-      {/* Step 2 & 3 required notice */}
+      {/* Required notices */}
+      {step === 1 && !canProceed() && (
+        <p className="mt-3 text-sm text-amber-600">
+          Country and City are required to continue.
+        </p>
+      )}
       {(step === 2 || step === 3) && !canProceed() && (
         <p className="mt-3 text-sm text-amber-600">
           Please enter at least one skill to continue.
@@ -423,7 +417,9 @@ export function OnboardingWizard({ userId, username, allSkills }: OnboardingWiza
             Back
           </Button>
         ) : (
-          <div />
+          <Button variant="outline" onClick={handleCancel} disabled={saving}>
+            Cancel
+          </Button>
         )}
 
         {step < totalSteps - 1 ? (
