@@ -10,6 +10,9 @@ const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
   title: "SkillTrade",
+  icons: {
+    icon: "/logo.png",
+  },
   robots: {
     index: false,
     follow: false,
